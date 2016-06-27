@@ -2,140 +2,81 @@
 
 
 def main():
-	muzofon()
-	gplay()
-	yandex()
-	shazam()
-	deezer()
-	zaycev()
-	zvooq()
+	Charts = CollectCharts()
+
 	
-def muzofon():
-	page = PageParse(url='http://muzofon.com/')
+def CollectCharts():
+	Charts =[]
+	
+	Charts.append([0,'Muzofon',muzofon()])
+	
+	top = TopParse('https://play.google.com/store/music/collection/topselling_paid_track', 
+					[['div','class','details'],
+					['a','class','subtitle'],
+					['a','class','title']],
+					LineBegin=5, LineEnd=-2)
+	Charts.append([1,'GooglePlay',top])
+	
+	top = TopParse('http://www.shazam.com/ru/charts/top-100/russia', 
+					[['div','class','ti__details'],
+					['p','class','ti__artist'],
+					['p','class','ti__title']],
+					Headers=True)
+	Charts.append([2,'Shazam',top])
+	
+	top = TopParse('http://www.deezer.com/playlist/1116189381', 
+					[['tr','class','song'],
+					['td','class','artist'],
+					['td','class','track']])
+	Charts.append([3,'Deezer',top])
+	
+	top = TopParse('http://zaycev.net/', 
+					[['div','class','musicset-track__title'],
+					['div','class','musicset-track__artist'],
+					['div','class','musicset-track__track-name']])
+	Charts.append([4,'Zaycev.net',top])
+	
+	top = TopParse('https://zvooq.com/playlist/1062105/', 
+					[['span','class','track-name'],
+					['span','class','track-artist'],
+					['span','class','track-title']])
+	Charts.append([5,'Zvooq',top])
+	
+	
+	print(u'\nСобраны ТОП-ы ресурсов: Ресурс - Количество треков')
+	for chart in Charts: print (chart[1]+' - '+str(len(chart[2])))
+	
+	return Charts
+	
+def TopParse(UrlParse, TagArray, LineBegin=0, LineEnd=0, Headers=False):	# парсим страницу ресурса, выбираем названиz исполнителя и трека
+	
+	page = PageParse(Url=UrlParse, PageHeaders=Headers)
 	TOP = []
-	for track in page.body.find_all('a', attrs={'class':'track'}):
+															# выбираем элементы, содержащие названия исполнителя и трека
+	for track in page.body.find_all(TagArray[0][0], attrs={TagArray[0][1]:TagArray[0][2]}):
 	
-		artist = track.find('strong').get_text() # название исполнителя выделено жирным
-		#artist = artist.encode(sys.stdout.encoding,  errors='ignore')
-		artist = artist.encode('ascii', errors='ignore')
-		
-		#from transliterate import translit, get_available_language_codes
-		#artist = translit(artist, 'ru')
-		
-		track.find('strong').decompose()
-		
-		track_name = track.get_text()
-		track_name = track_name.encode(sys.stdout.encoding,  errors='ignore')
-		track_name = track_name.strip()		# убираем пустые строки
-		track_name = track_name[2:]			# убираем тире перед названием трека
-		
-		TOP.append([artist,track_name])
-
-	return TOP
-	
-def gplay():
-	page = PageParse(url='https://play.google.com/store/music/collection/topselling_paid_track')
-	TOP = []
-	
-	for track in page.body.find_all('div', attrs={'class':'details'}):
-	
-		artist = track.find('a', attrs={'class':'subtitle'})
-		artist = artist.get_text()
-
-		track_name = track.find('a', attrs={'class':'title'})
-		track_name = track_name.get_text()
-		track_name = track_name[5:-2]			# убираем номер перед названием трека и пробелы до и после
-	
-		TOP.append([artist,track_name])
-
-	return TOP
-
-def yandex():
-	page = PageParse(url='https://music.yandex.ru/genre/all/tracks')
-	TOP = []
-	
-	for track in page.body.find_all('div', attrs={'class':'track__name-wrap'}):
-	
-		artist = track.find('div', attrs={'class':'track__artists nw'})
-		artist = artist.get_text()
-
-		track_name = track.find('a', attrs={'class':'track__title link'})
-		track_name = track_name.get_text()
-	
+		artist = GetString(track, TagArray[1])				# определяем название исполнителя									
+															# определяем название трека
+		track_name = GetString(track, TagArray[2], LineB=LineBegin, LineE=LineEnd)
 		TOP.append([artist,track_name])
 
 	return TOP
 
-def shazam():	# пришлось прописать заголовки
-	page = ShazamPageParse(url='http://www.shazam.com/ru/charts/top-100/russia')
-	TOP = []
-	
-	for track in page.body.find_all('div', attrs={'class':'ti__details'}):
-	
-		artist = track.find('p', attrs={'class':'ti__artist'})
-		artist = artist.get_text()
-		artist = artist.strip()		# убираем пустые строки
-
-		track_name = track.find('p', attrs={'class':'ti__title'})
-		track_name = track_name.get_text()
-		track_name = track_name.strip()		# убираем пустые строки
-		#track_name = track_name[5:-2]			# убираем номер перед названием трека и пробелы до и после
-	
-		TOP.append([artist,track_name])
-
-	return TOP
-	
-def deezer():
-	page = PageParse(url='http://www.deezer.com/playlist/1116189381')
-	TOP = []
-	
-	for track in page.body.find_all('tr', attrs={'class':'song'}):
+def GetString(TagLine, TagParam, LineB=0, LineE=0):	# выбираем и преобразуем текст по тэгам
 		
-		artist = track.find('td', attrs={'class':'artist'})
-		artist = artist.get_text()
-		artist = artist.strip()		# убираем пустые строки
-		
-		track_name = track.find('td', attrs={'class':'track'})
-		track_name = track_name.get_text()
-		track_name = track_name.strip()		# убираем пустые строки
-	
-		TOP.append([artist,track_name])
+	TagText = TagLine.find(TagParam[0], attrs={TagParam[1]:TagParam[2]})
+	TagText = TagText.get_text()
 
-	return TOP
+														# убираем номера/тире перед/после названия трека
+	if LineB>0: TagText = TagText[LineB:]	
+	if LineE>0: TagText = TagText[:LineE]
 	
-def zaycev():
-	page = PageParse(url='http://zaycev.net/')
-	TOP = []
+	TagText = TagText.strip()							# удаляем пробельные символы в начале и конце строки
+	TagText = translit(TagText)							# переводим транслитом
 	
-	for track in page.body.find_all('div', attrs={'class':'musicset-track__title'}):
-		
-		artist = track.find('div', attrs={'class':'musicset-track__artist'})
-		artist = artist.get_text()
-		
-		track_name = track.find('div', attrs={'class':'musicset-track__track-name'})
-		track_name = track_name.get_text()
-	
-		TOP.append([artist,track_name])
+	return TagText
 
-	return TOP
-	
-def zvooq():	# возвращает только первые 20 треков
-	page = PageParse(url='http://zvooq.ru/playlist/2800526/')
-	TOP = []
-	
-	for track in page.body.find_all('span', attrs={'class':'track-name'}):
-
-		artist = track.find_all('span', attrs={'class':'track-artist'})
-		artist = artist[0].get_text()
-
-		track_name = track.find('span', attrs={'class':'track-title'})
-		track_name = track_name.get_text()
-	
-		TOP.append([artist,track_name])
-
-	return TOP
-
-def PageParse(Url,PageHeaders=True):
+def PageParse(Url,PageHeaders):
 	import urllib2
 	from bs4 import BeautifulSoup
 	
@@ -151,6 +92,35 @@ def PageParse(Url,PageHeaders=True):
 	soup = BeautifulSoup(html, "html.parser")
 
 	return soup
+
+def translit(input):								# translit+lower
+	from trans import trans
+	translited = trans(input)
+	return translited.lower()
+
+
+def muzofon():
+	page = PageParse(Url='http://muzofon.com/',PageHeaders=False)
+	TOP = []
+
+	for img_tag in page.find_all('img'):		# для картинок сделали аналогиченый тэг a с классом tracktop
+		a_tag = img_tag.parent
+		a_tag.decompose()
+
+	for track in page.body.find_all('a', attrs={'class':'tracktop'}):
+		artist = track.find('strong').get_text() # название исполнителя выделено жирным
+		artist = translit(artist)
+		
+		track.find('strong').decompose()
+		
+		track_name = track.get_text()
+		track_name = track_name.strip()		# убираем пустые строки
+		track_name = track_name[2:]			# убираем тире перед названием трека
+		track_name = translit(track_name)
+		
+		TOP.append([artist,track_name])
+
+	return TOP
 
 	
 if __name__ == "__main__":
