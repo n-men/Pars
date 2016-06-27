@@ -4,6 +4,7 @@
 def main():
 	Charts = CollectCharts()
 	CompareTable = CompareCharts(Charts)
+	Draw(Charts, CompareTable)
 	
 	
 def CollectCharts():
@@ -185,6 +186,42 @@ def compare2lists(list1,list2):						# сравниваем 2 списка тр�
 		result = 0
 
 	return(result)
+
+
+def Draw(Charts, CompareTable):
+
+	import networkx as nx
+	import matplotlib.pyplot as plt
+	
+	G=nx.Graph()
+	
+	sizelist = []
+	labeldict = {}
+	
+	for n in range(0,len(Charts)):						# вершины
+		G.add_node(Charts[n][0])
+		labeldict[Charts[n][0]] = Charts[n][1]				# названия вершин - ресурсы
+		sizelist.append(len(Charts[n][2])*80)				# размер вершины - количество треков в ТОП-е
+	
+	edgewidthlist = []
+	
+	for e in range(0,len(CompareTable)):					# ребра + вес (для расчета местоположения)
+		G.add_edge(CompareTable[e][0],CompareTable[e][1], weight=CompareTable[e][2])
+		edgewidthlist.append(CompareTable[e][2])			# дополнительно еще раз указываем вес - для толщины
+		
+		
+	pos=nx.spring_layout(G) 						# расчет местоположения узлов по алгоритму Фрюхтермана и Рейнгольда 		
+										# направленной силы (Fruchterman-Reingold force-directed algorithm)
+										# силовой алгоритм для визуализации графов небольшого объема
+	
+	nx.draw_networkx_nodes(G,pos,node_size=sizelist, node_color='b', alpha=0.6)
+	nx.draw_networkx_edges(G,pos,width=edgewidthlist, alpha=0.7)
+	nx.draw_networkx_labels(G,pos,labels=labeldict, font_size=16)
+	
+	plt.axis('off')
+	plt.title(u'Relationships between music resources tops')
+	plt.show()
+
 	
 if __name__ == "__main__":
 	main()
