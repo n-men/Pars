@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-
 def main():
 	Charts = CollectCharts()
 	CompareTable = CompareCharts(Charts)
@@ -54,27 +53,27 @@ def TopParse(UrlParse, TagArray, LineBegin=0, LineEnd=0, Headers=False):	# па�
 	
 	page = PageParse(Url=UrlParse, PageHeaders=Headers)
 	TOP = []
-															# выбираем элементы, содержащие названия исполнителя и трека
+										# выбираем элементы, содержащие названия исполнителя и трека
 	for track in page.body.find_all(TagArray[0][0], attrs={TagArray[0][1]:TagArray[0][2]}):
 	
 		artist = GetString(track, TagArray[1])				# определяем название исполнителя									
-															# определяем название трека
+										# определяем название трека
 		track_name = GetString(track, TagArray[2], LineB=LineBegin, LineE=LineEnd)
 		TOP.append([artist,track_name])
 
 	return TOP
 
-def GetString(TagLine, TagParam, LineB=0, LineE=0):	# выбираем и преобразуем текст по тэгам
+def GetString(TagLine, TagParam, LineB=0, LineE=0):			# выбираем и преобразуем текст по тэгам
 		
 	TagText = TagLine.find(TagParam[0], attrs={TagParam[1]:TagParam[2]})
 	TagText = TagText.get_text()
 
-														# убираем номера/тире перед/после названия трека
+										# убираем номера/тире перед/после названия трека
 	if LineB>0: TagText = TagText[LineB:]	
 	if LineE>0: TagText = TagText[:LineE]
 	
-	TagText = TagText.strip()							# удаляем пробельные символы в начале и конце строки
-	TagText = translit(TagText)							# переводим транслитом
+	TagText = TagText.strip()						# удаляем пробельные символы в начале и конце строки
+	TagText = translit(TagText)						# переводим транслитом
 	
 	return TagText
 
@@ -84,7 +83,7 @@ def PageParse(Url,PageHeaders):
 	
 	if PageHeaders == True:
 		import requests
-		req = urllib2.Request(url)
+		req = urllib2.Request(Url)
 		req.add_header("User-Agent", "Mozilla/5.0")
 		source = urllib2.urlopen(req)
 	else:
@@ -104,19 +103,19 @@ def muzofon():
 	page = PageParse(Url='http://muzofon.com/',PageHeaders=False)
 	TOP = []
 
-	for img_tag in page.find_all('img'):		# для картинок сделали аналогиченый тэг a с классом tracktop
+	for img_tag in page.find_all('img'):				# для картинок сделали аналогиченый тэг a с классом tracktop
 		a_tag = img_tag.parent
 		a_tag.decompose()
 
 	for track in page.body.find_all('a', attrs={'class':'tracktop'}):
-		artist = track.find('strong').get_text() # название исполнителя выделено жирным
+		artist = track.find('strong').get_text()		# название исполнителя выделено жирным
 		artist = translit(artist)
 		
 		track.find('strong').decompose()
 		
 		track_name = track.get_text()
-		track_name = track_name.strip()		# убираем пустые строки
-		track_name = track_name[2:]			# убираем тире перед названием трека
+		track_name = track_name.strip()				# убираем пустые строки
+		track_name = track_name[2:]				# убираем тире перед названием трека
 		track_name = translit(track_name)
 		
 		TOP.append([artist,track_name])
@@ -124,7 +123,7 @@ def muzofon():
 	return TOP
 
 
-def CompareCharts(Charts):							# сравниваем ТОП-ы ресурсов между собой, каждый с каждым
+def CompareCharts(Charts):						# сравниваем ТОП-ы ресурсов между собой, каждый с каждым
 	print(u'\nВзаимосвязи между ресурсами: Ресурс 1 - Ресурс 2 - Сила связи')
 	CompareTable = []
 	for k in range(0,len(Charts)):
@@ -135,7 +134,7 @@ def CompareCharts(Charts):							# сравниваем ТОП-ы ресурсо
 	
 	return CompareTable
 	
-def dist(word1, word2):								# определяем схожесть 2-х треков
+def dist(word1, word2):							# определяем схожесть 2-х треков
 	import distance
 	
 	#print distance.hamming(word1, word2, normalized=True)	
@@ -155,7 +154,7 @@ def compare2lists(list1,list2):						# сравниваем 2 списка тр�
 		for j in range(0,len(list2)):
 			track2 = list2[j]
 			
-			if dist(track1[0],track2[0])<=0.4:			# исполнители совпадают
+			if dist(track1[0],track2[0])<=0.4:		# исполнители совпадают
 			
 			# порог dist=0.4 вычислен опытным путем:
 				# justin timberlake / dzhastin timberlyayk / 0.35
@@ -165,7 +164,7 @@ def compare2lists(list1,list2):						# сравниваем 2 списка тр�
 				# imany / timati / 0.5
 				# masha / basta / 0.4
 			
-				if dist(track1[1],track2[1])<=0.4:		# названия треков совпадают
+				if dist(track1[1],track2[1])<=0.4:	# названия треков совпадают
 					#print(track1[0]+' / '+track2[0]+' / '+str(dist(track1[0],track2[0])))
 					#print(track1[1]+' / '+track2[1]+' / '+str(dist(track1[1],track2[1])))
 					
@@ -225,11 +224,3 @@ def Draw(Charts, CompareTable):
 	
 if __name__ == "__main__":
 	main()
-	
-	
-	
-	
-	
-	
-	
-	
