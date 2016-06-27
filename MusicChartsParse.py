@@ -1,11 +1,5 @@
 #-*- coding: utf-8 -*-
 
-import urllib2
-from bs4 import BeautifulSoup
-import numpy as np
-import os
-import sys
-
 
 def main():
 	muzofon()
@@ -141,19 +135,21 @@ def zvooq():	# возвращает только первые 20 треков
 
 	return TOP
 
-def PageParse(url):
-	response = urllib2.urlopen(url)
-	html = response.read()
-	soup = BeautifulSoup(html, "html.parser")
-	return soup
+def PageParse(Url,PageHeaders=True):
+	import urllib2
+	from bs4 import BeautifulSoup
+	
+	if PageHeaders == True:
+		import requests
+		req = urllib2.Request(url)
+		req.add_header("User-Agent", "Mozilla/5.0")
+		source = urllib2.urlopen(req)
+	else:
+		source = urllib2.urlopen(Url)
 
-def ShazamPageParse(url):
-	import requests
-	req = urllib2.Request(url)
-	req.add_header("User-Agent", "Mozilla/5.0")
-	source = urllib2.urlopen(req)
 	html =  source.read()
 	soup = BeautifulSoup(html, "html.parser")
+
 	return soup
 
 	
